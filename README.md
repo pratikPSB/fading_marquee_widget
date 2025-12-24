@@ -51,6 +51,40 @@ FadingMarqueeWidget(
    ),
 )
 ```
+
+#### RTL (Right-to-Left) Support
+
+The widget automatically adapts to RTL text direction. Simply wrap it with `Directionality` widget:
+
+```dart
+Directionality(
+  textDirection: TextDirection.rtl,
+  child: FadingMarqueeWidget(
+    child: Text(
+      "نص طويل جداً جداً جداً جداً جداً جداً جداً جداً جداً جداً",
+      style: TextStyle(color: Colors.white),
+    ),
+  ),
+)
+```
+
+The widget also works with custom widgets containing RTL text:
+
+```dart
+Directionality(
+  textDirection: TextDirection.rtl,
+  child: FadingMarqueeWidget(
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.star),
+        SizedBox(width: 8),
+        Text("نص مع أيقونة"),
+      ],
+    ),
+  ),
+)
+```
 _Appreciate my work? Show some ❤️ and star the repo to support this package._
 
 ### Here is the working video of this package
