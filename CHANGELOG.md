@@ -23,3 +23,7 @@
 ## 1.1.0
 
 * Removed 3rd party package dependency as that was less maintained.
+
+## 1.2.0
+
+* Added Right to Left support for the marquee effect.
