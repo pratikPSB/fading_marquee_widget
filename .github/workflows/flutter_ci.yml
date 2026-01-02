@@ -1,0 +1,32 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  flutter-ci:
+    name: Flutter CI (Latest Stable)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter (latest stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Format check
+        run: dart format . --output=none
+
+      - name: Analyze (fail on deprecated usage)
+        run: flutter analyze --fatal-infos
+
+      - name: Run tests
+        run: flutter test
