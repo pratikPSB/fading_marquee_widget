@@ -1,7 +1,9 @@
 name: fading_marquee_widget
 description: "A flutter package to apply the marquee effect for the very long widget."
-version: 1.2.0
+version: 1.2.1
 homepage: https://github.com/pratikPSB/fading_marquee_widget
+repository: https://github.com/pratikPSB/fading_marquee_widget
+issue_tracker: https://github.com/pratikPSB/fading_marquee_widget/issues
 
 environment:
   sdk: ^3.8.0

@@ -32,6 +32,9 @@ class FadingEdgeScrollView extends StatefulWidget {
   /// 1 means gradients on start half of widget fully covers it
   final double gradientFractionOnEnd;
 
+  /// Duration for fade effect appear/disappear transition
+  final Duration fadeDuration;
+
   const FadingEdgeScrollView._internal({
     super.key,
     required this.child,
@@ -40,6 +43,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required this.scrollDirection,
     required this.gradientFractionOnStart,
     required this.gradientFractionOnEnd,
+    required this.fadeDuration,
   }) : assert(gradientFractionOnStart >= 0 && gradientFractionOnStart <= 1),
        assert(gradientFractionOnEnd >= 0 && gradientFractionOnEnd <= 1);
 
@@ -50,6 +54,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required ScrollView child,
     double gradientFractionOnStart = 0.1,
     double gradientFractionOnEnd = 0.1,
+    Duration fadeDuration = Duration.zero,
   }) {
     final controller = child.controller;
     if (controller == null) {
@@ -63,6 +68,7 @@ class FadingEdgeScrollView extends StatefulWidget {
       reverse: child.reverse,
       gradientFractionOnStart: gradientFractionOnStart,
       gradientFractionOnEnd: gradientFractionOnEnd,
+      fadeDuration: fadeDuration,
       child: child,
     );
   }
@@ -74,6 +80,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required SingleChildScrollView child,
     double gradientFractionOnStart = 0.1,
     double gradientFractionOnEnd = 0.1,
+    Duration fadeDuration = Duration.zero,
   }) {
     final controller = child.controller;
     if (controller == null) {
@@ -87,6 +94,7 @@ class FadingEdgeScrollView extends StatefulWidget {
       reverse: child.reverse,
       gradientFractionOnStart: gradientFractionOnStart,
       gradientFractionOnEnd: gradientFractionOnEnd,
+      fadeDuration: fadeDuration,
       child: child,
     );
   }
@@ -98,6 +106,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required PageView child,
     double gradientFractionOnStart = 0.1,
     double gradientFractionOnEnd = 0.1,
+    Duration fadeDuration = Duration.zero,
   }) {
     final controller = child.controller;
     //ignore: unnecessary_null_comparison
@@ -112,6 +121,7 @@ class FadingEdgeScrollView extends StatefulWidget {
       reverse: child.reverse,
       gradientFractionOnStart: gradientFractionOnStart,
       gradientFractionOnEnd: gradientFractionOnEnd,
+      fadeDuration: fadeDuration,
       child: child,
     );
   }
@@ -123,6 +133,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required AnimatedList child,
     double gradientFractionOnStart = 0.1,
     double gradientFractionOnEnd = 0.1,
+    Duration fadeDuration = Duration.zero,
   }) {
     final controller = child.controller;
     if (controller == null) {
@@ -136,6 +147,7 @@ class FadingEdgeScrollView extends StatefulWidget {
       reverse: child.reverse,
       gradientFractionOnStart: gradientFractionOnStart,
       gradientFractionOnEnd: gradientFractionOnEnd,
+      fadeDuration: fadeDuration,
       child: child,
     );
   }
@@ -147,6 +159,7 @@ class FadingEdgeScrollView extends StatefulWidget {
     required ListWheelScrollView child,
     double gradientFractionOnStart = 0.1,
     double gradientFractionOnEnd = 0.1,
+    Duration fadeDuration = Duration.zero,
   }) {
     final controller = child.controller;
     if (controller == null) {
@@ -160,6 +173,7 @@ class FadingEdgeScrollView extends StatefulWidget {
       reverse: false,
       gradientFractionOnStart: gradientFractionOnStart,
       gradientFractionOnEnd: gradientFractionOnEnd,
+      fadeDuration: fadeDuration,
       child: child,
     );
   }
@@ -169,16 +183,28 @@ class FadingEdgeScrollView extends StatefulWidget {
 }
 
 class FadingEdgeScrollViewState extends State<FadingEdgeScrollView>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late ScrollController _controller;
   _ScrollState _scrollState = _ScrollState.notScrollable;
+  _ScrollState _previousScrollState = _ScrollState.notScrollable;
   int lastScrollViewListLength = 0;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.scrollController;
     _controller.addListener(_updateScrollState);
+
+    _fadeController = AnimationController(
+      duration: widget.fadeDuration,
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
 
     WidgetsBinding.instance.addObserver(this);
   }
@@ -191,6 +217,21 @@ class FadingEdgeScrollViewState extends State<FadingEdgeScrollView>
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
     _controller.removeListener(_updateScrollState);
+    _fadeController.dispose();
+  }
+
+  @override
+  void didUpdateWidget(FadingEdgeScrollView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.fadeDuration != widget.fadeDuration) {
+      _fadeController.duration = widget.fadeDuration;
+    }
+    if (oldWidget.scrollController != widget.scrollController) {
+      _controller.removeListener(_updateScrollState);
+      _controller = widget.scrollController;
+      _controller.addListener(_updateScrollState);
+      _updateScrollState();
+    }
   }
 
   @override
@@ -201,22 +242,25 @@ class FadingEdgeScrollViewState extends State<FadingEdgeScrollView>
   }
 
   @override
-  Widget build(BuildContext context) => ShaderMask(
-    shaderCallback: (bounds) => _createShaderGradient().createShader(
-      bounds.shift(Offset(-bounds.left, -bounds.top)),
-      textDirection: Directionality.of(context),
-    ),
-    blendMode: BlendMode.dstIn,
-    // Catching ScrollMetricsNotifications from the Scrollable child.
-    // This way we get notified if the size of the underlying list changes.
-    // We then re-evaluate if Gradient should be shown.
-    child: NotificationListener<ScrollMetricsNotification>(
-      child: widget.child,
-      onNotification: (_) {
-        _updateScrollState();
-        // Enable notification to still bubble up.
-        return false;
-      },
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _fadeAnimation,
+    builder: (context, _) => ShaderMask(
+      shaderCallback: (bounds) => _createShaderGradient().createShader(
+        bounds.shift(Offset(-bounds.left, -bounds.top)),
+        textDirection: Directionality.of(context),
+      ),
+      blendMode: BlendMode.dstIn,
+      // Catching ScrollMetricsNotifications from the Scrollable child.
+      // This way we get notified if the size of the underlying list changes.
+      // We then re-evaluate if Gradient should be shown.
+      child: NotificationListener<ScrollMetricsNotification>(
+        child: widget.child,
+        onNotification: (_) {
+          _updateScrollState();
+          // Enable notification to still bubble up.
+          return false;
+        },
+      ),
     ),
   );
 
@@ -257,12 +301,39 @@ class FadingEdgeScrollViewState extends State<FadingEdgeScrollView>
       ? AlignmentDirectional.centerStart
       : AlignmentDirectional.centerEnd;
 
-  List<Color> _getColors(bool showGradientAtStart, bool showGradientAtEnd) => [
-    (showGradientAtStart ? Colors.transparent : Colors.white),
-    Colors.white,
-    Colors.white,
-    (showGradientAtEnd ? Colors.transparent : Colors.white),
-  ];
+  List<Color> _getColors(bool showGradientAtStart, bool showGradientAtEnd) {
+    if (widget.fadeDuration == Duration.zero) {
+      return [
+        showGradientAtStart ? Colors.transparent : Colors.white,
+        Colors.white,
+        Colors.white,
+        showGradientAtEnd ? Colors.transparent : Colors.white,
+      ];
+    } else {
+      final fadeValue = _fadeAnimation.value;
+
+      final bool wasStart = widget.gradientFractionOnStart > 0 &&
+          _previousScrollState.isShowGradientAtStart;
+      final double alphaStart = wasStart == showGradientAtStart
+          ? (showGradientAtStart ? 0.0 : 1.0)
+          : (showGradientAtStart ? 1.0 - fadeValue : fadeValue);
+
+      final bool wasEnd = widget.gradientFractionOnEnd > 0 &&
+          _previousScrollState.isShowGradientAtEnd;
+      final double alphaEnd = wasEnd == showGradientAtEnd
+          ? (showGradientAtEnd ? 0.0 : 1.0)
+          : (showGradientAtEnd ? 1.0 - fadeValue : fadeValue);
+
+      return [
+        (showGradientAtStart ? Colors.transparent : Colors.white)
+            .withValues(alpha: alphaStart),
+        Colors.white,
+        Colors.white,
+        (showGradientAtEnd ? Colors.transparent : Colors.white)
+            .withValues(alpha: alphaEnd),
+      ];
+    }
+  }
 
   void _updateScrollState() {
     if (!_controllerIsReady) {
@@ -285,8 +356,11 @@ class FadingEdgeScrollViewState extends State<FadingEdgeScrollView>
 
     if (_scrollState != scrollState) {
       setState(() {
+        _previousScrollState = _scrollState;
         _scrollState = scrollState;
       });
+      // Trigger fade animation on scroll state change
+      _fadeController.forward(from: 0.0);
     }
   }
 }

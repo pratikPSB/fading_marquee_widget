@@ -332,6 +332,43 @@ class _MyAppState extends State<MyApp> {
                     ],
                   ),
                 ),
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    isRTL
+                        ? "مثال على تدرج الحواف والمدة المتلاشية"
+                        : "Gradient and fade duration example",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(8.0),
+                          color: Theme.of(context).primaryColor,
+                          child: FadingMarqueeWidget(
+                            duration: const Duration(seconds: 5),
+                            gradientFractionOnStart: 0.3,
+                            gradientFractionOnEnd: 0.3,
+                            fadeDuration: const Duration(milliseconds: 500),
+                            child: Text(
+                              isRTL
+                                  ? "مثال مدمج مع تدرج حواف مخصص (0.3 في البداية والنهاية) ومدة تلاشي 500 ميلي ثانية. نص طويل جداً جداً جداً جداً جداً جداً جداً جداً جداً جداً."
+                                  : "Combined example with custom gradient fractions (0.3 at start and end) and 500ms fade duration. very very very very very very very very very very long text.",
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

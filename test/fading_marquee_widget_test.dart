@@ -64,4 +64,56 @@ void main() {
       expect(foundWidget, findsOneWidget);
     },
   );
+
+  testWidgets(
+    "marquee widget with gradient fraction parameters",
+    (widgetTester) async {
+      var widget = const Directionality(
+        textDirection: TextDirection.ltr,
+        child: FadingMarqueeWidget(
+          gradientFractionOnStart: 0.15,
+          gradientFractionOnEnd: 0.2,
+          child: Text("testing gradient fractions"),
+        ),
+      );
+      await widgetTester.pumpWidget(widget);
+      final foundWidget = find.byWidget(widget);
+      expect(foundWidget, findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "marquee widget with fade duration parameter",
+    (widgetTester) async {
+      var widget = const Directionality(
+        textDirection: TextDirection.ltr,
+        child: FadingMarqueeWidget(
+          fadeDuration: Duration(milliseconds: 500),
+          child: Text("testing fade duration"),
+        ),
+      );
+      await widgetTester.pumpWidget(widget);
+      final foundWidget = find.byWidget(widget);
+      expect(foundWidget, findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "marquee widget with all gradient and fade parameters",
+    (widgetTester) async {
+      var widget = const Directionality(
+        textDirection: TextDirection.ltr,
+        child: FadingMarqueeWidget(
+          gradientFractionOnStart: 0.15,
+          gradientFractionOnEnd: 0.2,
+          fadeDuration: Duration(milliseconds: 500),
+          duration: Duration(seconds: 5),
+          child: Text("testing all fade and gradient parameters together"),
+        ),
+      );
+      await widgetTester.pumpWidget(widget);
+      final foundWidget = find.byWidget(widget);
+      expect(foundWidget, findsOneWidget);
+    },
+  );
 }

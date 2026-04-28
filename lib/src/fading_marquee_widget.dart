@@ -29,6 +29,17 @@ class FadingMarqueeWidget extends StatefulWidget {
   /// Direction of the scroll either vertical or horizontal
   final Axis scrollDirection;
 
+  /// Fraction of screen (0-1) that the start gradient should cover
+  /// 0 = no gradient, 1 = full gradient coverage
+  final double gradientFractionOnStart;
+
+  /// Fraction of screen (0-1) that the end gradient should cover
+  /// 0 = no gradient, 1 = full gradient coverage
+  final double gradientFractionOnEnd;
+
+  /// Duration for fade effect appear/disappear transition
+  final Duration fadeDuration;
+
   const FadingMarqueeWidget({
     super.key,
     required this.child,
@@ -39,6 +50,9 @@ class FadingMarqueeWidget extends StatefulWidget {
     this.id,
     this.pause = const Duration(seconds: 1),
     this.scrollDirection = Axis.horizontal,
+    this.gradientFractionOnStart = 0.1,
+    this.gradientFractionOnEnd = 0.1,
+    this.fadeDuration = Duration.zero,
   });
 
   @override
@@ -165,8 +179,9 @@ class _FadingMarqueeWidgetState extends State<FadingMarqueeWidget>
   @override
   Widget build(BuildContext context) {
     return FadingEdgeScrollView.fromSingleChildScrollView(
-      gradientFractionOnStart: widget.disableAnimation ? 0 : 0.1,
-      gradientFractionOnEnd: widget.disableAnimation ? 0 : 0.1,
+      gradientFractionOnStart: widget.disableAnimation ? 0 : widget.gradientFractionOnStart,
+      gradientFractionOnEnd: widget.disableAnimation ? 0 : widget.gradientFractionOnEnd,
+      fadeDuration: widget.fadeDuration,
       child: SingleChildScrollView(
         controller: scrollController,
         scrollDirection: widget.scrollDirection,
